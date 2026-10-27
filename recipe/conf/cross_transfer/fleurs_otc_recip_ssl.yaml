@@ -1,22 +1,24 @@
 # =========================================================================
-# asr_otc_recip | LibriSpeech train_clean_100_ran_10h_worderror30 (10h, 30% word errors)
-# features : frozen SSL: wav2vec2_base_960 (s3prl)
-# batching : batch_bins/accum_grad 6000000/1, warmup_steps 3000 (10h subset,
-#            as conf/cross_transfer/libri_ctc_ssl.yaml)
-# tokens   : BPE-200   |   epochs: 30   |   CTC-only (decoder=none, ctc_weight=1.0)
+# asr_otc_recip | CROSS-TRANSFER sweep | FLEURS | ssl
+# features : frozen SSL (s3prl upstream)   |   epochs: 30
 # -------------------------------------------------------------------------
-# METHOD: ctc
-# CTC baseline -- star arcs OFF.
-# Goes through the IDENTICAL k2 graph compiler and k2.ctc_loss call as
-# every OTC mode below, with allow_bypass_arc/allow_self_loop_arc set to
-# false: it is the same loss with the wildcard arcs switched off, not a
-# different CTC implementation.  (Verified bit-for-bit against
-# espnet2/asr/ctc_k2.py in otc_recip/tests/test_parity_vs_asr_otc.py.)
-# -------------------------------------------------------------------------
-# Within this corpus, EVERYTHING outside the ctc_conf loss block is identical
-# across the four methods (encoder, optimiser, LR schedule, specaug, batching,
-# seed, keep_nbest_models, averaging).  Enforced by
-# otc_recip/tests/test_config_within_corpus.py (libri_final/ only).
+# METHOD: otc_recip
+# OTC-RECIP base for the entropy_shape_k sweep.
+# entropy_shape_k below (1.2) is the shipped value and only makes the file
+# runnable on its own: run_ebf_otc_recip_crosstransfer.sh overrides it per
+# run with --ctc_conf entropy_shape_k=<K>.  Every other entropy parameter is
+# byte-identical to conf/<corpus>_final/otc_recip.yaml, so the sweep varies
+# k and nothing else.
+#
+# Everything outside ctc_conf is byte-identical to
+# conf/cross_transfer/fleurs_otc_token_ssl.yaml,
+# so the three sweep modes (ctc, otc_token, otc_recip) differ only in the
+# loss.  Controlled across all of them:
+#   initial_bypass_weight -25.0, initial_self_loop_weight -5.0,
+#   batch_bins/accum_grad 6000000/1, warmup_steps 3000.
+#
+# Run with:
+#   ./run_ebf_otc_recip_crosstransfer.sh --corpora fleurs --variants ssl --modes otc_recip
 # =========================================================================
 
 encoder: e_branchformer
@@ -48,20 +50,32 @@ model_conf:
   report_cer: true
   report_wer: false
 ctc_conf:
-  arc_schedule: none
-  allow_bypass_arc: false
-  allow_self_loop_arc: false
+  otc_granularity: token
+  allow_bypass_arc: true
+  allow_self_loop_arc: true
+  arc_schedule: entropy_reciprocal
+  entropy_mode: soft
+  entropy_source: dev
+  entropy_ema_alpha: 0.3
+  entropy_low: 0.01
+  entropy_shape_k: 1.2
+  entropy_eps: 0.0001
+  initial_bypass_weight: -25.0
+  initial_self_loop_weight: -5.0
+  bypass_end: -0.01
+  self_loop_end: -0.001
   output_beam: 100.0
   use_double_scores: true
 frontend: s3prl
 frontend_conf:
   frontend_conf:
-    upstream: wav2vec2_base_960
+    upstream: wav2vec2_url
+    path_or_url: https://huggingface.co/s3prl/converted_ckpts/resolve/main/xlsr2_300m.pt
   download_dir: ./hub
   multilayer_feature: true
 preencoder: linear
 preencoder_conf:
-  input_size: 768
+  input_size: 1024
   output_size: 80
 freeze_param:
 - frontend.upstream

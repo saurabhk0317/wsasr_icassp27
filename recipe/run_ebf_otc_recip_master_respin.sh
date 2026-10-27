@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# asr_otc_recip | RESPIN | Table 1 : 9 languages x 7 methods = 63 cells
+# asr_otc_recip | RESPIN | main WER table : 9 languages x 7 methods = 63 cells
 #
 # Features : STFT filterbank, NO SSL.  A frozen SSL frontend gives no benefit
 #            on RESPIN in our prior work, so the non-SSL setup is the one
@@ -63,7 +63,7 @@ gpu=1
 encoder=ebf                # ebf | conformer (see the header)
 train_stage=11             # features already dumped
 suffix=stft_char
-seeds=20261                # one seed here; the sweep lives in *_seeds.sh
+seeds=20261                # the paper used 2026 for ch, hi, kn; see ../README.md
 langs="bn bh ch hi kn mg mt mr te"   # verbatim; must match the dump's dir names
 nbpe=500                   # unused for token_type=char, but asr_respin.sh wants it
 asr_script=asr_respin.sh
@@ -108,7 +108,7 @@ OTCR_INFER_CONFIG=conf/respin/decode_ctc.yaml
 otcr_require_config "${OTCR_INFER_CONFIG}"
 
 echo "======================================================================"
-echo "asr_otc_recip | RESPIN | Table 1"
+echo "asr_otc_recip | RESPIN | main WER table"
 echo "  features: filterbank (suffix ${suffix}, start stage ${train_stage})"
 echo "  encoder : ${encoder}"
 echo "  methods : ${RUN_METHODS[*]}"

@@ -1,18 +1,23 @@
 # =========================================================================
-# asr_otc_recip | LABEL SMOOTHING | LibriSpeech train_clean_100
+# asr_otc_recip | CROSS-TRANSFER sweep | RESPIN | ssl
+# features : frozen SSL (s3prl upstream)   |   epochs: 30
 # -------------------------------------------------------------------------
-# CTC label smoothing, eps=0.05.  Star arcs OFF.
-#     L         = (1 - eps) * L_CTC + eps * L_uniform
-#     L_uniform = - mean over VALID frames of [ (1/V) * sum_v log p_t(v) ]
-# V = real_odim: blank INCLUDED, the <star> column EXCLUDED.
+# METHOD: ctc
+# CTC baseline for the sweep -- star arcs OFF.
+# Same k2 graph compiler and k2.ctc_loss call as the OTC modes, with
+# allow_bypass_arc/allow_self_loop_arc false, so this is the reference line
+# every decay and k value is measured against.  Nothing is swept for this
+# mode: there is exactly one cell per corpus/language/variant.
 #
-# NOTE: espnet's model_conf.lsm_weight smooths the ATTENTION DECODER's
-# cross-entropy and does NOT touch CTC.  There is no CTC label smoothing in
-# espnet, so this is implemented in espnet2/asr/ctc_otc_recip.py and pinned
-# down by otc_recip/tests/test_label_smoothing.py.
+# Everything outside ctc_conf is byte-identical to
+# conf/cross_transfer/respin_otc_token_ssl.yaml,
+# so the three sweep modes (ctc, otc_token, otc_recip) differ only in the
+# loss.  Controlled across all of them:
+#   initial_bypass_weight -25.0, initial_self_loop_weight -5.0,
+#   batch_bins/accum_grad 6000000/1, warmup_steps 3000.
 #
-# This is the control for 'is OTC just doing label smoothing?'.  The only
-# difference from conf/libri_final/ctc.yaml is the added eps term.
+# Run with:
+#   ./run_ebf_otc_recip_crosstransfer.sh --corpora respin --variants ssl --modes ctc
 # =========================================================================
 
 encoder: e_branchformer
@@ -44,29 +49,29 @@ model_conf:
   report_cer: true
   report_wer: false
 ctc_conf:
-  arc_schedule: label_smoothing
+  arc_schedule: none
   allow_bypass_arc: false
   allow_self_loop_arc: false
-  ctc_label_smoothing: 0.05
   output_beam: 100.0
   use_double_scores: true
 frontend: s3prl
 frontend_conf:
   frontend_conf:
-    upstream: wav2vec2_base_960
+    upstream: wav2vec2_url
+    path_or_url: https://huggingface.co/s3prl/converted_ckpts/resolve/main/xlsr2_300m.pt
   download_dir: ./hub
   multilayer_feature: true
 preencoder: linear
 preencoder_conf:
-  input_size: 768
+  input_size: 1024
   output_size: 80
 freeze_param:
 - frontend.upstream
 seed: 2026
 num_workers: 8
 batch_type: numel
-batch_bins: 16000000
-accum_grad: 4
+batch_bins: 6000000
+accum_grad: 1
 max_epoch: 30
 patience: null
 init: none

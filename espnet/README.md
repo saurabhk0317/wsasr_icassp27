@@ -47,15 +47,15 @@ CTC with no error or warning. It is a no-op for models that do not define
 
 ## 3. Arc schedules
 
-`arc_schedule` in the config selects one of four behaviours, documented at
-length in the module docstring of `ctc_otc_recip.py`:
+`arc_schedule` in the config selects the relaxation; the three used in the
+paper are below, and all are documented in the module docstring of
+`ctc_otc_recip.py`:
 
 | value | behaviour |
 |---|---|
 | `none` | star arcs off; plain CTC through the same k2 graph |
 | `epoch` | geometric per-epoch decay of the arc weights |
 | `entropy_reciprocal` | relaxation indexed by held-out non-blank predictive entropy |
-| `label_smoothing` | star arcs off, plus a uniform-KL regulariser on the frame posteriors |
 
 `otc_granularity` selects `word`, `token` or `dual` (token arcs plus one word
 bypass per word).
@@ -63,6 +63,16 @@ bypass per word).
 ## 4. Check the install
 
 The tests in `../recipe/otc_recip/tests/` exercise the config surface, the dual
-graph, the `star_start_epoch` gate, the label-smoothing branch, the seed path,
-and parity against the predecessor implementation. Run them from the recipe
-directory with the ESPnet environment active.
+graph, the `star_start_epoch` gate and the seed path. Run them from the recipe
+directory with the ESPnet environment active:
+
+```bash
+cd recipe && PYTHONPATH=/path/to/espnet python -m pytest otc_recip/tests/ -q
+```
+
+The two config-test files need only PyYAML and pytest and check that every
+shipped config holds the parameter set the paper reports. One file,
+`test_parity_vs_asr_otc.py`, compares the CTC baseline bit-for-bit against an
+earlier in-house implementation (`espnet2/asr/{ctc_otc_clean,otc_sched_affine,ctc_k2}.py`)
+that is not part of this release, so it is skipped in a fresh ESPnet tree;
+the other files do not depend on it.

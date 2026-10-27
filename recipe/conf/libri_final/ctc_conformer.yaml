@@ -15,7 +15,7 @@
 # espnet2/asr/ctc_k2.py in otc_recip/tests/test_parity_vs_asr_otc.py.)
 # -------------------------------------------------------------------------
 # Within this corpus, EVERYTHING outside the ctc_conf loss block is identical
-# across the four methods (encoder, optimiser, LR schedule, specaug, batching,
+# across the criteria (encoder, optimiser, LR schedule, specaug, batching,
 # seed, keep_nbest_models, averaging).  Enforced by
 # otc_recip/tests/test_config_within_corpus.py.
 # =========================================================================

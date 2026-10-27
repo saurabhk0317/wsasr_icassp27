@@ -34,7 +34,9 @@ import sys
 import pytest
 import torch
 
-from espnet2.asr.ctc_otc_clean import CTC as CTCold  # asr_otc (reference)
+# The reference implementation is not part of the public release; skip this
+# module rather than fail collection when it is absent.
+CTCold = pytest.importorskip("espnet2.asr.ctc_otc_clean").CTC  # asr_otc (reference)
 from espnet2.asr.ctc_otc_recip import CTC as CTCnew  # asr_otc_recip (new)
 
 # Fixed synthetic setup -- deliberately small so this runs on CPU in seconds.

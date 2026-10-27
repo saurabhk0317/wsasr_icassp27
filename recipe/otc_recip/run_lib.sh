@@ -79,9 +79,8 @@ otcr_require_config() {
     [ -n "${cfg}" ] || otcr_die "empty config path"
     [ -f "${cfg}" ] || otcr_die "missing train config '${cfg}'.
   Configs are NOT generated on the fly. Expected one of:
-    conf/{respin,libri,fleurs}_final/{ctc,otc_word,otc_token,otc_recip}[_conformer].yaml
-    conf/cross_transfer/<corpus>_otc_token_{nonssl,ssl}.yaml
-    conf/label_smoothing/libri_ls{0p005,0p01,0p02,0p05}.yaml"
+    conf/{respin,libri,fleurs}_final/<method>[_conformer].yaml
+    conf/cross_transfer/<corpus>_<mode>_{nonssl,ssl}.yaml"
 }
 
 # --------------------------------------------------------------------------
@@ -318,5 +317,5 @@ otcr_summary() {
         echo "Finished: ${OTCR_N_RUN} cell(s) run (${OTCR_N_PARTIAL} resumed at decode), \
 ${OTCR_N_SKIP} skipped as already complete."
     fi
-    echo "Collect the table with:  python scripts/collect_otc_recip_results.py"
+    echo "Collect WERs with:  python ../analysis/tables/extract_wer.py  (set ROOT first)"
 }

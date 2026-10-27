@@ -1,0 +1,112 @@
+# =========================================================================
+# asr_otc_recip | CROSS-TRANSFER decay sweep | FLEURS | ssl
+# features : frozen SSL (s3prl upstream)   |   epochs: 30
+# -------------------------------------------------------------------------
+# Base config for the OTC-TOKEN decay sweep. The decay itself is NOT set
+# here in any meaningful sense: run_ebf_otc_recip_crosstransfer.sh
+# overrides both decay keys per run with
+#     --ctc_conf bypass_weight_decay=<D> --ctc_conf self_loop_weight_decay=<D>
+# The value below (0.7) is only the variant's native
+# setting, kept so the file is runnable on its own.
+#
+# CONTROLLED ACROSS ALL SIX SWEEP CONFIGS, so that a shift in the optimal
+# decay is attributable to the front-end and the epoch budget alone:
+#   initial_bypass_weight    -25.0   (both variants; NOT the -15 the SSL
+#                                     main-table configs use)
+#   initial_self_loop_weight  -5.0
+#   batch_bins / accum_grad   6000000 / 1   (these are 10h subsets, so the
+#                                     larger LibriSpeech batching is not used)
+#   warmup_steps              3000   (SSL)
+#
+# Run with:
+#   ./run_ebf_otc_recip_crosstransfer.sh --corpora fleurs --variants ssl
+# =========================================================================
+
+encoder: e_branchformer
+encoder_conf:
+  output_size: 256
+  attention_heads: 4
+  attention_layer_type: rel_selfattn
+  pos_enc_layer_type: rel_pos
+  rel_pos_type: latest
+  cgmlp_linear_units: 1024
+  cgmlp_conv_kernel: 31
+  use_linear_after_conv: false
+  gate_activation: identity
+  num_blocks: 12
+  dropout_rate: 0.1
+  positional_dropout_rate: 0.1
+  attention_dropout_rate: 0.1
+  input_layer: conv2d2
+  layer_drop_rate: 0.0
+  linear_units: 1024
+  positionwise_layer_type: linear
+  use_ffn: true
+  macaron_ffn: true
+  merge_conv_kernel: 31
+decoder: none
+model_conf:
+  extract_feats_in_collect_stats: false
+  ctc_weight: 1.0
+  report_cer: true
+  report_wer: false
+ctc_conf:
+  otc_granularity: token
+  allow_bypass_arc: true
+  allow_self_loop_arc: true
+  arc_schedule: epoch
+  initial_bypass_weight: -25.0
+  bypass_weight_decay: 0.7
+  initial_self_loop_weight: -5.0
+  self_loop_weight_decay: 0.7
+  output_beam: 100.0
+  use_double_scores: true
+frontend: s3prl
+frontend_conf:
+  frontend_conf:
+    upstream: wav2vec2_url
+    path_or_url: https://huggingface.co/s3prl/converted_ckpts/resolve/main/xlsr2_300m.pt
+  download_dir: ./hub
+  multilayer_feature: true
+preencoder: linear
+preencoder_conf:
+  input_size: 1024
+  output_size: 80
+freeze_param:
+- frontend.upstream
+seed: 2026
+num_workers: 8
+batch_type: numel
+batch_bins: 6000000
+accum_grad: 1
+max_epoch: 30
+patience: null
+init: none
+best_model_criterion:
+- - valid
+  - loss
+  - min
+keep_nbest_models: 5
+use_amp: false
+optim: adam
+optim_conf:
+  lr: 0.002
+  weight_decay: 1.0e-06
+scheduler: warmuplr
+scheduler_conf:
+  warmup_steps: 3000
+specaug: specaug
+specaug_conf:
+  apply_time_warp: true
+  time_warp_window: 5
+  time_warp_mode: bicubic
+  apply_freq_mask: true
+  freq_mask_width_range:
+  - 0
+  - 27
+  num_freq_mask: 2
+  apply_time_mask: true
+  time_mask_width_ratio_range:
+  - 0.0
+  - 0.05
+  num_time_mask: 5

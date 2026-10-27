@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# asr_otc_recip | FLEURS | Table 1 : 14 languages x 7 methods = 98 cells
+# asr_otc_recip | FLEURS | main WER table : 14 languages x 7 methods = 98 cells
 #
 # Features : frozen SSL -- XLS-R 300M (xlsr2_300m.pt) via the s3prl upstream.
 #            The checkpoint downloads to ./hub on first use.
@@ -106,7 +106,7 @@ OTCR_INFER_CONFIG=conf/fleurs/decode_ctc.yaml
 otcr_require_config "${OTCR_INFER_CONFIG}"
 
 echo "======================================================================"
-echo "asr_otc_recip | FLEURS | Table 1"
+echo "asr_otc_recip | FLEURS | main WER table"
 echo "  encoder : ${encoder}"
 echo "  methods : ${RUN_METHODS[*]}"
 echo "  langs   : ${RUN_LANGS[*]}"

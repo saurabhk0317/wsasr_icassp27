@@ -2,9 +2,9 @@
 #
 # Part of ESPnet. Licensed under the Apache License, Version 2.0
 # (see the LICENSE file in the ESPnet source root).
-"""Within a corpus, the four methods may differ ONLY in the loss block.
+"""Within a corpus, the criteria may differ ONLY in the loss block.
 
-Table 1 compares CTC / OTC-WORD / OTC-TOKEN / OTC-RECIP inside each corpus.
+The main WER table compares the seven criteria inside each corpus.
 That comparison is only honest if the encoder, optimiser, LR schedule,
 specaug, batching, seed and checkpoint-averaging policy are the same in all
 four -- otherwise a WER difference could come from the training setup rather
@@ -140,7 +140,7 @@ def test_non_schedule_ctc_conf_keys_match(corpus, suffix):
 @pytest.mark.parametrize("corpus,suffix", VARIANTS,
                          ids=[f"{c}{s or '_nonssl'}" for c, s in VARIANTS])
 def test_ctc_only(corpus, suffix):
-    """Every Table-1 cell is CTC-only: no attention decoder in the mix."""
+    """Every main-table cell is CTC-only: no attention decoder in the mix."""
     for method in METHODS:
         cfg = _load(corpus, method, suffix)
         assert cfg["decoder"] == "none", f"{corpus}{suffix}/{method}"
@@ -337,6 +337,8 @@ def test_all_libri_configs_share_batching():
 
 
 def test_label_smoothing_differs_only_by_the_eps_term():
+    if not (CONF / "label_smoothing").is_dir():
+        pytest.skip("label-smoothing control is not part of this release")
     base = _load("libri", "ctc")
     for eps, fname in [
         (0.005, "libri_ls0p005.yaml"),

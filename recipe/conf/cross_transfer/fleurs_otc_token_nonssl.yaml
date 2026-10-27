@@ -1,20 +1,25 @@
 # =========================================================================
-# asr_otc_recip | LibriSpeech train_clean_100_ran_10h_worderror30 (10h, 30% word errors)
-# features : frozen SSL: wav2vec2_base_960 (s3prl)
-# batching : batch_bins/accum_grad 6000000/1, warmup_steps 3000 (10h subset,
-#            as conf/cross_transfer/libri_ctc_ssl.yaml)
-# tokens   : BPE-200   |   epochs: 30   |   CTC-only (decoder=none, ctc_weight=1.0)
+# asr_otc_recip | CROSS-TRANSFER decay sweep | FLEURS | nonssl
+# features : STFT filterbank, no SSL   |   epochs: 70
 # -------------------------------------------------------------------------
-# METHOD: otc_token
-# OTC-TOKEN -- one <star> arc per TOKEN, epoch-indexed geometric
-# decay w(e) = w_init * decay^(e-1).
-# The decay is tied to the EPOCH BUDGET and has to be retuned when that
-# budget changes -- which is exactly the weakness otc_recip removes.
-# -------------------------------------------------------------------------
-# Within this corpus, EVERYTHING outside the ctc_conf loss block is identical
-# across the four methods (encoder, optimiser, LR schedule, specaug, batching,
-# seed, keep_nbest_models, averaging).  Enforced by
-# otc_recip/tests/test_config_within_corpus.py (libri_final/ only).
+# Base config for the OTC-TOKEN decay sweep. The decay itself is NOT set
+# here in any meaningful sense: run_ebf_otc_recip_crosstransfer.sh
+# overrides both decay keys per run with
+#     --ctc_conf bypass_weight_decay=<D> --ctc_conf self_loop_weight_decay=<D>
+# The value below (0.9) is only the variant's native
+# setting, kept so the file is runnable on its own.
+#
+# CONTROLLED ACROSS ALL SIX SWEEP CONFIGS, so that a shift in the optimal
+# decay is attributable to the front-end and the epoch budget alone:
+#   initial_bypass_weight    -25.0   (both variants; NOT the -15 the SSL
+#                                     main-table configs use)
+#   initial_self_loop_weight  -5.0
+#   batch_bins / accum_grad   6000000 / 1   (these are 10h subsets, so the
+#                                     larger LibriSpeech batching is not used)
+#   warmup_steps              5000   (non-SSL)
+#
+# Run with:
+#   ./run_ebf_otc_recip_crosstransfer.sh --corpora fleurs --variants nonssl
 # =========================================================================
 
 encoder: e_branchformer
@@ -32,7 +37,7 @@ encoder_conf:
   dropout_rate: 0.1
   positional_dropout_rate: 0.1
   attention_dropout_rate: 0.1
-  input_layer: conv2d2
+  input_layer: conv2d
   layer_drop_rate: 0.0
   linear_units: 1024
   positionwise_layer_type: linear
@@ -41,7 +46,6 @@ encoder_conf:
   merge_conv_kernel: 31
 decoder: none
 model_conf:
-  extract_feats_in_collect_stats: false
   ctc_weight: 1.0
   report_cer: true
   report_wer: false
@@ -51,36 +55,28 @@ ctc_conf:
   allow_self_loop_arc: true
   arc_schedule: epoch
   initial_bypass_weight: -25.0
-  bypass_weight_decay: 0.775
+  bypass_weight_decay: 0.9
   initial_self_loop_weight: -5.0
-  self_loop_weight_decay: 0.775
+  self_loop_weight_decay: 0.9
   output_beam: 100.0
   use_double_scores: true
-frontend: s3prl
 frontend_conf:
-  frontend_conf:
-    upstream: wav2vec2_base_960
-  download_dir: ./hub
-  multilayer_feature: true
-preencoder: linear
-preencoder_conf:
-  input_size: 768
-  output_size: 80
-freeze_param:
-- frontend.upstream
+  n_fft: 512
+  win_length: 400
+  hop_length: 160
 seed: 2026
 num_workers: 8
 batch_type: numel
 batch_bins: 6000000
 accum_grad: 1
-max_epoch: 30
+max_epoch: 70
 patience: null
 init: none
 best_model_criterion:
 - - valid
   - loss
   - min
-keep_nbest_models: 5
+keep_nbest_models: 10
 use_amp: false
 optim: adam
 optim_conf:
@@ -88,7 +84,7 @@ optim_conf:
   weight_decay: 1.0e-06
 scheduler: warmuplr
 scheduler_conf:
-  warmup_steps: 3000
+  warmup_steps: 5000
 specaug: specaug
 specaug_conf:
   apply_time_warp: true

@@ -40,9 +40,34 @@ weights are relaxed.
 | OTC-TW<sub>H</sub> | `otc_token_word_recip` | `dual` | `entropy_reciprocal` | 3 |
 
 `star_start_epoch: 3` means epochs 1--2 train on the plain CTC graph and the
-arc-weight clock starts at epoch 3. Configs with `_conformer` appended differ
-from their counterparts only in the encoder block and in
-`patience: 5` / `keep_nbest_models: 5`.
+arc-weight clock starts at epoch 3.
+
+**Divergent OTC-W<sub>e</sub> runs.** With the published bypass weight of −19,
+OTC-W<sub>e</sub> diverged on some languages and was rerun with a larger
+penalty, as stated in the paper. The reported cells use:
+
+| corpus | language | `initial_bypass_weight` | penalties that also diverged |
+|---|---|---|---|
+| FLEURS | `ml_in` | −30 | −19, −25 |
+| FLEURS | `ta_in` | −30 | −19 |
+| RESPIN | `kn` | −35 | −19, −25, −30 |
+| RESPIN | `mr`, `te` | −30 | −19 |
+| RESPIN | `mg` | −30 | — |
+
+Every other language uses −19 from `otc_word.yaml`. To rerun one of these
+cells, export the override before calling the master script; `run_lib.sh`
+merges it into the `ctc_conf` block loaded from the config:
+
+```bash
+OTCR_ASR_ARGS="--ctc_conf initial_bypass_weight=-35" \
+  ./run_ebf_otc_recip_master_respin.sh --methods otc_word --langs kn
+```
+
+**Conformer.** Configs with `_conformer` appended differ from their
+counterparts only in the encoder block and in `patience: 5` /
+`keep_nbest_models: 5`. The paper reports Conformer results for LibriSpeech
+only; the RESPIN and FLEURS Conformer configs are included because the config
+tests cover all three corpora, not because results for them are reported.
 
 ## From the paper to this repository
 
@@ -53,7 +78,7 @@ from their counterparts only in the encoder block and in
 | arithmetic check on the WER table | `analysis/tables/verify_table.py` |
 | Conformer table (`tab:conformer`) | the same runs with `--encoder conformer` |
 | wildcard-arc settings (`tab:criteria`) | the `ctc_conf` blocks of `recipe/conf/*_final/*.yaml` |
-| schedule-sensitivity figure (`fig:sweep`) | `recipe/run_ebf_otc_ablation_granularity_libri.py` to train, `analysis/tables/plot_hparam_sweep.py` to plot |
+| schedule-sensitivity figure (`fig:sweep`) | `recipe/run_ebf_otc_recip_crosstransfer.sh` (its LibriSpeech 10 h SSL `otc_token` decay sweep and `otc_recip` κ sweep, scored on the combined dev set) to train, `analysis/tables/plot_hparam_sweep.py` to plot |
 | disagreement table (`tab:disagree`) | `analysis/disagreement/run_mutual.sh`, then `analysis/tables/make_table2.py` |
 | significance tests quoted in the text | `analysis/disagreement/bootstrap_pvalues.py`; output in `analysis/results/bootstrap_pvalues.txt` |
 
@@ -70,7 +95,7 @@ The reported results were produced with:
 | Python | 3.10.18 |
 | PyTorch | 2.9.1+cu128 |
 | ESPnet | commit `29a4df6492` (see `espnet/ESPNET_COMMIT`) |
-| k2 | used for all WFST losses; see `espnet/README.md` |
+| k2 | 1.24.4.dev20260525+cuda12.8.torch2.9.1 (all WFST losses) |
 | sentencepiece | 0.2.1 |
 | numpy | 2.2.6 |
 
@@ -97,7 +122,11 @@ weights never advance and every OTC system silently degenerates toward CTC.
 - The cached frame posteriors used by the disagreement probes (~136 MB
   intermediate; regenerable with `analysis/disagreement/run_star_posteriors.sh`
   from the checkpoints).
-- Exploratory variants of the criterion that the paper does not report.
+- Experiments that the paper does not report, and the code paths specific to
+  them: exploratory variants of the criterion, a granularity-by-weight swap
+  ablation, runs on transcripts with injected word errors, seed-variance runs,
+  and a uniform-KL regularisation control. The loss still contains the
+  `label_smoothing` schedule used by that control, but no config here selects it.
 
 ## Citation
 

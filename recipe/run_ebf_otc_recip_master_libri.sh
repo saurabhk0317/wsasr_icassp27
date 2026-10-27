@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================================
-# asr_otc_recip | LibriSpeech train_clean_100 | Table 1 : 1 set x 7 methods
+# asr_otc_recip | LibriSpeech train_clean_100 | main WER table : 1 set x 7 methods
 #
 # Features : frozen SSL -- wav2vec2_base_960 via the s3prl upstream.  The
 #            checkpoint downloads to ./hub on first use.
@@ -98,7 +98,7 @@ OTCR_INFER_CONFIG=conf/libri/decode_ctc.yaml
 otcr_require_config "${OTCR_INFER_CONFIG}"
 
 echo "======================================================================"
-echo "asr_otc_recip | LibriSpeech ${train_set} | Table 1"
+echo "asr_otc_recip | LibriSpeech ${train_set} | main WER table"
 echo "  encoder : ${encoder}"
 echo "  methods : ${RUN_METHODS[*]}"
 echo "  seeds   : ${seeds}"

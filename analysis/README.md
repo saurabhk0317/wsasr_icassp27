@@ -13,6 +13,10 @@
 `wer_data.json` holds every WER quoted in the paper, so the WER table can be
 regenerated without retraining anything.
 
+The script names use the numbering of an earlier draft: `gen_table1_v2.py` and
+`verify_table.py` produce and check the main WER table (`tab:main`), and
+`make_table2.py` produces the disagreement table (`tab:disagree`).
+
 ## `disagreement/` — the validator-disagreement pipeline
 
 Run in this order:
@@ -64,7 +68,6 @@ Several scripts carry absolute paths from the machine the experiments ran on:
 | `disagreement/run_mutual.sh`, `run_all.sh`, `run_star_posteriors.sh` | `EXP`, `VENV` | the experiment root and the ESPnet virtualenv activate script |
 | `tables/extract_wer.py` | `ROOT` | the directory holding the `{libri,fleurs,respin}` experiment trees |
 | `tables/plot_hparam_sweep.py` | `OUT_DIR` | where the figure is written |
-| `../recipe/run_ebf_otc_ablation_granularity_libri.py` | `VENV_ACTIVATE` | the ESPnet virtualenv activate script |
 
 The disagreement pipeline additionally needs the three validator transcripts
 beside each `text` in the RESPIN tree that `DATA_ROOT` points at. Those are not
