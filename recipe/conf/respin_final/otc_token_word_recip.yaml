@@ -9,7 +9,7 @@
 # arc and a self-loop at EVERY token) plus one word-level bypass arc per word
 # of >= 2 tokens.  All three arcs follow ONE entropy-driven progress -- the
 # same entropy block as otc_recip (k 1.3, chosen by the LibriSpeech 10h SSL
-# cross-transfer k-sweep) -- each gliding log-geometrically start -> end:
+# kappa sweep, paper Fig. 2b) -- each gliding log-geometrically start -> end:
 #   token bypass  -25.0 -> -0.01    (as otc_recip)
 #   self-loop      -5.0 -> -0.001   (as otc_recip)
 #   word bypass   -19.0 -> -1.0

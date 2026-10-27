@@ -1,58 +1,49 @@
-# Does `<star>` land where validators disagree?
+# Wildcard-bypass probability vs validator disagreement
 
-RESPIN dev/test utterances have four transcripts: `text` (the base
-transcript every model was trained and scored on) and three independent
-validator transcripts (`text_gts`, `text_nt`, `text_artpark`). This study asks
-whether a trained model, given the chance, routes the characters/words that
-validators disagree on through `<star>` arcs, and whether star-trained (OTC)
-models do this more than the CTC control.
+The pipeline behind the paper's disagreement table (`tab:disagree`) and the
+statistics quoted beside it.
 
-Everything here is **read-only** on `WSASR/exp_final` and
-`CR_CTC/data_respin`; all outputs are written in this directory.
+RESPIN dev/test utterances have the reference transcript `text`, on which every
+model was trained and scored, and three independent validator transcripts
+(`text_gts`, `text_nt`, `text_artpark`; see `../../transcripts/README.md`).
 
-## Run
+## Definitions (as in the paper)
 
-```bash
-./run_all.sh --gpus "0 1"          # all 9 languages, dev + test (~35 min on 2 GPUs)
-```
+* **Disputed.** Each validator transcript is aligned to the reference by a
+  character-level Levenshtein alignment. A character or word is *disputed* when
+  at least one validator changes it **and** the validators do not all propose
+  the same alternative. A unit that all three validators correct identically is
+  a unanimous correction (an erroneous rather than ambiguous reference) and is
+  dropped from both pools (`--drop_consensus`). Every other unit is *agreed*.
+  A word is changed if any of its characters is, or a validator inserts inside
+  it. Punctuation is excluded.
+* **Bypass probability** `m_k`. Each model's frame posteriors are composed with
+  the wildcard graph of the reference and the posterior probability that an
+  alignment takes the bypass arc at unit `k` is computed exactly by
+  forward--backward (k2, tagged arcs). Every system is probed at the same fixed
+  bypass weight `w = 0`, for characters (`tok_bp_w0`) and words (`word_bp_w0`).
+  CTC is scored through the same graph as a control.
+* **Statistics.** Means over units, pooled over the nine languages; paired
+  cluster bootstrap over utterances for the differences from CTC.
 
-## Files
+## Steps
 
-| file | step | what |
+| step | script | output |
 |---|---|---|
-| `label_disagreement.py` | 1 | per-char / per-word / per-boundary validator disagreement labels -> `labels/` |
-| `star_posteriors.py` | 2 | loads one model's averaged checkpoint, runs the audio, builds the OTC graph for `text`, exact `<star>` posteriors per position -> `posteriors/` |
-| `run_star_posteriors.sh` | 2 | driver for all (language, split, model); resumable; multi-GPU |
-| `sanity_checks.py` | - | tagged-lattice posteriors vs brute force (must print PASS) |
-| `analyze.py` | 3-5 | descriptives, AUC, OTC-vs-CTC comparison, pooled model -> `results/` |
-| `run_all.sh` | 1-5 | everything |
+| 1 | `label_disagreement_mutual.py` (uses the alignment in `label_disagreement.py`) | `labels_mutual/<lang>_<split>.pkl.gz` |
+| 2 | `run_star_posteriors.sh` -> `star_posteriors.py` | `posteriors/` (needs the checkpoints, GPU; ~136 MB, not shipped) |
+| 3 | `analyze.py --drop_consensus` | per-language means (`*_descriptives.csv`) and the split by number of dissenting validators (`*_by_ndisp.csv`) |
+| 4 | `mean_diff_bootstrap.py --drop_consensus` | pooled agreed/disputed means with 95% CIs (`mean_diff_bootstrap.txt`, 1000 resamples) |
+| 5 | `bootstrap_pvalues.py` | the p-values quoted in the paper (10000 resamples) |
+| - | `sanity_checks.py` | checks the bypass posteriors against a brute-force recomputation (must print PASS) |
 
-## Method, briefly
+`run_mutual.sh` runs steps 1, 3, 4 and 5 once step 2 has produced the
+posteriors. `analyze.py` also writes further diagnostics that the paper does
+not use; only the outputs listed above are shipped, in `../results/`.
 
-* **Labels.** Character-level Levenshtein alignment of `text` against each
-  validator. A char is *disputed* if a validator substitutes or deletes it;
-  a boundary is disputed if a validator inserts there; a word is disputed if
-  any of its chars is, or a validator inserts inside it. Punctuation is
-  excluded by default (silent; no model can star it).
-* **Star measures.** For each model, the same probe graphs are built on its
-  posteriors (the CTC model included -- its `<star>` column is computed from
-  its logits exactly as in training):
-  token bypass at weights 0 / -2 / -5, token self-loop at 0 / -2, word bypass
-  at 0 / -2 / -6, and each OTC model's own granularity at its final training
-  weights. Posteriors are exact (tagged arcs through k2), verified against a
-  brute force. A weight-free critical bypass weight (`lam`) comes from the
-  stars-off Viterbi path.
-* **Control.** CTC never trained with `<star>`; its association between star
-  placement and disagreement measures how much of the effect is plain
-  acoustics. The OTC claim is about the difference from CTC.
-* **Statistics.** AUC per model; paired cluster-bootstrap dAUC (OTC - CTC);
-  logistic regression of star (p > 0.5) on disputed x model with covariates
-  (char class, word length, position, char frequency, utterance CER) and
-  cluster-robust SEs by utterance; pooled across languages with language
-  fixed effects.
+For RESPIN `kn`, the OTC-W<sub>e</sub> model is the converged rerun at bypass
+weight -35 (`otc_word_bpn35`), as in the main WER table; this is the default
+of `run_star_posteriors.sh --kn_word`.
 
-## Models
-
-`exp_final/respin/<lang>_s5/asr_otcrecip_respin_<lang>_{ctc,otc_word,otc_token,otc_recip}`
-(averaged `valid.loss.ave.pth`). For kn, `otc_word` = `otc_word_bpn35`
-(bpn19/25/30 never converged); change with `run_star_posteriors.sh --kn_word`.
+Paths to the RESPIN data, the experiment root and the virtualenv are set at the
+top of the scripts (see `../README.md`, "Paths to edit before running").

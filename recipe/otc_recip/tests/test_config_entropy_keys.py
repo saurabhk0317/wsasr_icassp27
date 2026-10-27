@@ -7,7 +7,8 @@
 The contribution is that the entropy-reciprocal schedule needs no per-setup
 retuning: ONE parameter set drives RESPIN with filterbank features at 70
 epochs, LibriSpeech (BPE-200, wav2vec2-base, 30 epochs) and FLEURS (char,
-XLS-R, 30 epochs), with both the e_branchformer and the conformer encoder.
+XLS-R, 30 epochs) with the e_branchformer encoder, and LibriSpeech with the
+conformer encoder.
 
 So the entire loss block of every ``otc_recip*.yaml`` must be byte-identical.
 If someone ever "just tunes ``entropy_low`` a bit for FLEURS", the claim is
@@ -37,10 +38,10 @@ CORPORA = ["respin", "libri", "fleurs"]
 
 # Every otc_recip config in the study, as (corpus, filename suffix).
 # RESPIN is filterbank-only; LibriSpeech and FLEURS are frozen-SSL only.  Each
-# corpus ships an e_branchformer ("") and a conformer ("_conformer") config.
+# corpus ships an e_branchformer ("") config; LibriSpeech also ships a
+# conformer ("_conformer") one.
 RECIP_CONFIGS = [("respin", ""), ("libri", ""), ("fleurs", ""),
-                 ("respin", "_conformer"), ("libri", "_conformer"),
-                 ("fleurs", "_conformer")]
+                 ("libri", "_conformer")]
 
 # The parameter set claimed to transfer.  Written out literally so the test is
 # a specification, not a tautology over whatever the files happen to contain.
@@ -156,7 +157,7 @@ def test_otc_token_matches_the_final_parameter_set(corpus, suffix):
 
 
 # Final otc_word_tuned / otc_token_word loss blocks, identical in every corpus
-# and encoder.  Tuned on the LibriSpeech 10h SSL cross-transfer sweep; both
+# and encoder.  Selected on the LibriSpeech 10h SSL subset of Fig. 2; both
 # start their star arcs at epoch 3.
 OTC_WORD_TUNED_EXPECTED = {
     "otc_granularity": "word",
@@ -250,10 +251,10 @@ def test_epoch_budgets_really_do_differ():
         )["max_epoch"]
         for c, s in RECIP_CONFIGS
     }
-    for s in ("", "_conformer"):
-        assert epochs[f"respin{s}"] == 70, epochs
-        assert epochs[f"libri{s}"] == 30, epochs
-        assert epochs[f"fleurs{s}"] == 30, epochs
+    assert epochs["respin"] == 70, epochs
+    assert epochs["libri"] == 30, epochs
+    assert epochs["fleurs"] == 30, epochs
+    assert epochs["libri_conformer"] == 30, epochs
 
 
 if __name__ == "__main__":

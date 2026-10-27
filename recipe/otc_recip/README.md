@@ -194,13 +194,13 @@ python -c "from espnet2.tasks.asr_otc_recip import ASRTask; print('ok')"
 ## Layout
 
 ```
-run_ebf_otc_recip_master_{respin,libri,fleurs}.sh   main WER and Conformer tables
-run_ebf_otc_recip_crosstransfer.sh                  10 h sweeps (schedule-sensitivity figure)
+run_ebf_otc_recip_master_{respin,libri,fleurs}.sh   main WER table (libri: also the Conformer table)
+run_ebf_otc_recip_sweep.sh                          LibriSpeech 10 h sweeps (schedule-sensitivity figure)
 otc_recip/run_lib.sh                                shared resume / dry-run driver
 otc_recip/tests/                                    config, graph and seed tests
 
-conf/{respin,libri,fleurs}_final/                   the seven criteria (+ _conformer variants)
-conf/cross_transfer/                                base configs for the sweeps
+conf/{respin,libri,fleurs}_final/                   the seven criteria (libri: + _conformer variants)
+conf/sweep/                                         base configs for the sweeps
 conf/{respin,libri,fleurs}/decode_ctc.yaml          CTC prefix-search decoding, no LM
 ```
 

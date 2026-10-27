@@ -35,27 +35,17 @@
 # RESUME: a cell whose score_wer/result.txt already exists is SKIPPED by
 # default, with the reason printed.  --force reruns it.
 #
-# ENCODER (--encoder ebf | conformer), default ebf:
-#   ebf        e_branchformer, conf/fleurs_final/<method>.yaml
-#   conformer  conformer,      conf/fleurs_final/<method>_conformer.yaml
-#              and "_conformer" in the asr_tag (same exp_<lang>_<suffix> dir)
-# The conformer configs differ from their ebf counterparts only in the
-# encoder block and in patience 5 (keep_nbest_models is 5 in both).  ebf runs
-# carry no encoder tag, so existing experiment names are unchanged.
-#
 # Usage
 #   ./run_ebf_otc_recip_master_fleurs.sh --dry-run
 #   ./run_ebf_otc_recip_master_fleurs.sh --langs "Hindi Greek" --methods otc_recip
 #   ./run_ebf_otc_recip_master_fleurs.sh --methods "otc_word_tuned otc_token_word otc_token_word_recip"
 #   ./run_ebf_otc_recip_master_fleurs.sh --data_root /path/to/data_fleurs --gpu 2
-#   ./run_ebf_otc_recip_master_fleurs.sh --encoder conformer --dry-run
 # ============================================================================
 
 . ./otc_recip/run_lib.sh
 
 # ---- options ---------------------------------------------------------------
 gpu=0
-encoder=ebf                # ebf | conformer (see the header)
 train_stage=10            # 10 = redo collect-stats for the SSL frontend
 suffix=ssl_xlsr300m
 seeds=20261
@@ -84,13 +74,6 @@ otcr_expand_bool_flags "$@"
 set -- "${OTCR_ARGV[@]}"
 . utils/parse_options.sh
 
-# Resolve the encoder.  ebf keeps the original config names and asr_tags.
-case "${encoder}" in
-  ebf)       cfg_enc="";           enc_tag="" ;;
-  conformer) cfg_enc="_conformer"; enc_tag="conformer" ;;
-  *)         otcr_die "--encoder must be 'ebf' or 'conformer', got '${encoder}'" ;;
-esac
-
 ALL_METHODS=(ctc otc_word otc_token otc_recip otc_word_tuned otc_token_word otc_token_word_recip)
 otcr_filter "${methods}" "${ALL_METHODS[@]}"
 RUN_METHODS=("${OTCR_FILTERED[@]}")
@@ -107,7 +90,6 @@ otcr_require_config "${OTCR_INFER_CONFIG}"
 
 echo "======================================================================"
 echo "asr_otc_recip | FLEURS | main WER table"
-echo "  encoder : ${encoder}"
 echo "  methods : ${RUN_METHODS[*]}"
 echo "  langs   : ${RUN_LANGS[*]}"
 echo "  seeds   : ${seeds}"
@@ -124,7 +106,7 @@ OTCR_GPU="${gpu}"
 OTCR_TRAIN_STAGE="${train_stage}"
 OTCR_INFER_MODEL="${infer_model}"
 OTCR_INFER_TAG="decode_ctc_asr_model_${infer_model%.pth}"
-OTCR_VARIANT="${enc_tag}"
+OTCR_VARIANT=""
 
 for lang in "${RUN_LANGS[@]}"; do
     # shellcheck disable=SC2059
@@ -169,7 +151,7 @@ for lang in "${RUN_LANGS[@]}"; do
         for seed in ${seeds}; do
             OTCR_METHOD="${method}"
             OTCR_SEED="${seed}"
-            OTCR_CONFIG="conf/fleurs_final/${method}${cfg_enc}.yaml"
+            OTCR_CONFIG="conf/fleurs_final/${method}.yaml"
             otcr_run_cell
         done
     done

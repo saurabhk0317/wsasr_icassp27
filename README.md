@@ -63,11 +63,11 @@ OTCR_ASR_ARGS="--ctc_conf initial_bypass_weight=-35" \
   ./run_ebf_otc_recip_master_respin.sh --methods otc_word --langs kn
 ```
 
-**Conformer.** Configs with `_conformer` appended differ from their
+**Conformer.** The LibriSpeech configs with `_conformer` appended
+(`recipe/conf/libri_final/*_conformer.yaml`) differ from their E-Branchformer
 counterparts only in the encoder block and in `patience: 5` /
-`keep_nbest_models: 5`. The paper reports Conformer results for LibriSpeech
-only; the RESPIN and FLEURS Conformer configs are included because the config
-tests cover all three corpora, not because results for them are reported.
+`keep_nbest_models: 5`. As in the paper, the Conformer comparison covers
+LibriSpeech only.
 
 ## From the paper to this repository
 
@@ -78,13 +78,13 @@ tests cover all three corpora, not because results for them are reported.
 | arithmetic check on the WER table | `analysis/tables/verify_table.py` |
 | Conformer table (`tab:conformer`) | the same runs with `--encoder conformer` |
 | wildcard-arc settings (`tab:criteria`) | the `ctc_conf` blocks of `recipe/conf/*_final/*.yaml` |
-| schedule-sensitivity figure (`fig:sweep`) | `recipe/run_ebf_otc_recip_crosstransfer.sh` (its LibriSpeech 10 h SSL `otc_token` decay sweep and `otc_recip` κ sweep, scored on the combined dev set) to train, `analysis/tables/plot_hparam_sweep.py` to plot |
+| schedule-sensitivity figure (`fig:sweep`) | `recipe/run_ebf_otc_recip_sweep.sh` (CTC, the OTC-T<sub>e</sub> τ sweep and the OTC-T<sub>H</sub> κ sweep on a 10 h LibriSpeech subset with the frozen SSL front-end, scored on dev-clean + dev-other) to train, `analysis/tables/plot_hparam_sweep.py` to plot |
 | disagreement table (`tab:disagree`) | `analysis/disagreement/run_mutual.sh`, then `analysis/tables/make_table2.py` |
 | significance tests quoted in the text | `analysis/disagreement/bootstrap_pvalues.py`; output in `analysis/results/bootstrap_pvalues.txt` |
 
-The pooled figures the paper quotes are in
-`analysis/results/results_mutual_drop/` (`test_report.md` and `dev_report.md`
-carry the per-language and pooled tables).
+The pooled and per-language disagreement statistics the paper quotes are in
+`analysis/results/` (see `analysis/README.md` for which file backs which
+statement).
 
 ## Environment
 
@@ -122,11 +122,10 @@ weights never advance and every OTC system silently degenerates toward CTC.
 - The cached frame posteriors used by the disagreement probes (~136 MB
   intermediate; regenerable with `analysis/disagreement/run_star_posteriors.sh`
   from the checkpoints).
-- Experiments that the paper does not report, and the code paths specific to
-  them: exploratory variants of the criterion, a granularity-by-weight swap
-  ablation, runs on transcripts with injected word errors, seed-variance runs,
-  and a uniform-KL regularisation control. The loss still contains the
-  `label_smoothing` schedule used by that control, but no config here selects it.
+- Experiments that the paper does not report, together with their configs
+  and run scripts. Only the runs behind the paper's tables and figure are
+  covered here. The loss module also implements a `label_smoothing` schedule
+  that no shipped config selects.
 
 ## Citation
 

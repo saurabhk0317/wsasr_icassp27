@@ -30,18 +30,7 @@
 # default, with the reason printed.  --force reruns it.
 #
 # RESPIN is run with filterbank features only (no SSL variant):
-#   conf/respin_final/<method>[_conformer].yaml, exp suffix stft_char.
-#
-# ENCODER (--encoder ebf | conformer), default ebf:
-#
-#   ebf        e_branchformer, conf/respin_final/<method>.yaml
-#   conformer  conformer,      conf/respin_final/<method>_conformer.yaml
-#              and "_conformer" in the asr_tag (same exp_<tag>_<suffix> dir)
-#
-# The conformer configs differ from their ebf counterparts only in the
-# encoder block and in patience 5 / keep_nbest_models 5; batching, epochs,
-# warmup, specaug and the loss are the same.  ebf runs carry no encoder tag,
-# so existing experiment names are unchanged.
+#   conf/respin_final/<method>.yaml, exp suffix stft_char.
 #
 # Usage
 #   ./run_ebf_otc_recip_master_respin.sh --dry-run
@@ -49,7 +38,6 @@
 #   ./run_ebf_otc_recip_master_respin.sh --methods "otc_word_tuned otc_token_word otc_token_word_recip"
 #   ./run_ebf_otc_recip_master_respin.sh --langs "hi kn" --gpu 1
 #   ./run_ebf_otc_recip_master_respin.sh --methods "ctc otc_token" --force
-#   ./run_ebf_otc_recip_master_respin.sh --encoder conformer --dry-run
 #
 # --langs is taken VERBATIM: pass whatever tokens name the language
 # directories in your dump. Nothing is translated or validated against a
@@ -60,7 +48,6 @@
 
 # ---- options ---------------------------------------------------------------
 gpu=1
-encoder=ebf                # ebf | conformer (see the header)
 train_stage=11             # features already dumped
 suffix=stft_char
 seeds=20261                # the paper used 2026 for ch, hi, kn; see ../README.md
@@ -85,13 +72,6 @@ otcr_expand_bool_flags "$@"
 set -- "${OTCR_ARGV[@]}"
 . utils/parse_options.sh
 
-# Resolve the encoder.  ebf keeps the original config names and asr_tags.
-case "${encoder}" in
-  ebf)       cfg_enc="";           enc_tag="" ;;
-  conformer) cfg_enc="_conformer"; enc_tag="conformer" ;;
-  *)         otcr_die "--encoder must be 'ebf' or 'conformer', got '${encoder}'" ;;
-esac
-
 ALL_METHODS=(ctc otc_word otc_token otc_recip otc_word_tuned otc_token_word otc_token_word_recip)
 otcr_filter "${methods}" "${ALL_METHODS[@]}"
 RUN_METHODS=("${OTCR_FILTERED[@]}")
@@ -110,7 +90,6 @@ otcr_require_config "${OTCR_INFER_CONFIG}"
 echo "======================================================================"
 echo "asr_otc_recip | RESPIN | main WER table"
 echo "  features: filterbank (suffix ${suffix}, start stage ${train_stage})"
-echo "  encoder : ${encoder}"
 echo "  methods : ${RUN_METHODS[*]}"
 echo "  langs   : ${RUN_LANGS[*]}"
 echo "  seeds   : ${seeds}"
@@ -125,7 +104,7 @@ OTCR_SCRIPT="${asr_script}"
 OTCR_GPU="${gpu}"
 OTCR_TRAIN_STAGE="${train_stage}"
 OTCR_INFER_MODEL="${infer_model}"
-OTCR_VARIANT="${enc_tag}"
+OTCR_VARIANT=""
 OTCR_INFER_TAG="decode_ctc_asr_model_${infer_model%.pth}"
 
 for code in "${RUN_LANGS[@]}"; do
@@ -170,7 +149,7 @@ for code in "${RUN_LANGS[@]}"; do
         for seed in ${seeds}; do
             OTCR_METHOD="${method}"
             OTCR_SEED="${seed}"
-            OTCR_CONFIG="conf/respin_final/${method}${cfg_enc}.yaml"
+            OTCR_CONFIG="conf/respin_final/${method}.yaml"
             otcr_run_cell
         done
     done

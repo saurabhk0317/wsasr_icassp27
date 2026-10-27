@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
-"""Hyper-parameter sweeps for OTC-T_e (epoch decay tau) and OTC-T_H
-(shaping exponent kappa) on a random 10h subset of LibriSpeech
-train-clean-100, SSL front-end, WER on dev-clean + dev-other.
+"""Paper Fig. 2 (fig:sweep): sensitivity of OTC-T_e to the epoch decay tau
+and of OTC-T_H to the shaping exponent kappa, on a random 10h subset of
+LibriSpeech train-clean-100, frozen SSL front-end, WER on dev-clean +
+dev-other.  The runs come from recipe/run_ebf_otc_recip_sweep.sh; the dev
+WERs below are the ones plotted in the paper.
 
-Writes figures/hparam_sweep.{eps,png} into the ICASSP-27 Overleaf folder.
+Writes hparam_sweep.{eps,png} into OUT_DIR (first argument, default ./figures).
 
-Run with the ESPnet venv (system python has no matplotlib):
-  /home3/Saurabh/tools/espnet_may22_2026/tools/venv/bin/python plot_hparam_sweep.py
+  python plot_hparam_sweep.py [OUT_DIR]
 """
 import os
+import sys
 
 import matplotlib
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-OUT_DIR = "/home3/Saurabh/exp/espnet/RESPIN/WSASR/overleaf/WSASR_ICASSP27/figures"
+OUT_DIR = sys.argv[1] if len(sys.argv) > 1 else "figures"
 OUT_NAME = "hparam_sweep"
 
 CTC_WER = 13.92

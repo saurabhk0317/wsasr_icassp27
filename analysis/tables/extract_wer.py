@@ -13,18 +13,14 @@ Output JSON schema:
       "libri":  {"test_clean": {...}, "test_other": {...}},
       "fleurs": {"<fleurs_locale_code>": {...}, ...},
       "respin": {"<respin_two_letter_code>": {...}, ...},
-      "libri_conformer":   {"test_clean": {...}, "test_other": {...}},
-      "libri_labelsmooth": {"test_clean": {"0p005": WER, ...}, "test_other": {...}},
+      "libri_conformer": {"test_clean": {...}, "test_other": {...}},
     }
-  where each {...} under libri/fleurs/respin/libri_conformer has keys
-  ctc/word/token/recip/tw/twr/wtuned (WER, float or null if that run doesn't
-  exist yet) plus a "<key>_path" pointing at the result_lid.txt each number
-  was read from, for traceability. libri_labelsmooth instead has one key per
-  epsilon in LABELSMOOTH_EPS (Sec. 4.4's regularisation control, not one of
-  the seven Table 1 systems).
+  where each {...} has keys ctc/word/token/recip/tw/twr/wtuned (WER, float or
+  null if that run doesn't exist yet) plus a "<key>_path" pointing at the
+  result_lid.txt each number was read from, for traceability.
 
 System key -> model-dir suffix (asr_otcrecip_<corpus>_<lang>_<suffix>):
-    ctc     otc_word (or the converged-bypass variant, see *_word_override)
+    ctc     ctc
     word    otc_word (or the converged-bypass variant, see *_word_override)
     token   otc_token          (OTC-T_e:  bypass-weight decay 0.775)
     recip   otc_recip          (OTC-T_H:  entropy shaping exponent k=1.3)
@@ -110,24 +106,6 @@ def libri_row(testset, encoder_suffix=""):
     return row
 
 
-LABELSMOOTH_EPS = ["0p005", "0p01", "0p02", "0p05"]
-
-
-def libri_labelsmooth_row(testset):
-    """Sec. 4.4's regularisation control: CTC + label smoothing at eps in
-    {0.005, 0.01, 0.02, 0.05}, no wildcard arcs. Not one of the seven Table 1
-    systems, so kept in its own top-level key rather than in SYS."""
-    base = os.path.join(ROOT, "libri", "train_clean_100")
-    row = {}
-    for eps in LABELSMOOTH_EPS:
-        model_dir = f"asr_otcrecip_libri_en_labelsmooth_ls{eps}"
-        p = os.path.join(base, model_dir, "decode_ctc_asr_model_valid.loss.ave",
-                          testset, "result_lid.txt")
-        row[eps] = get_wer(p)
-        row[f"{eps}_path"] = p
-    return row
-
-
 def main():
     results = {
         "_generated": datetime.datetime.now().isoformat(timespec="seconds"),
@@ -139,7 +117,6 @@ def main():
         "fleurs": {code: fleurs_row(code) for code in FLEURS_LANGS},
         "libri": {ts: libri_row(ts) for ts in ["test_clean", "test_other"]},
         "libri_conformer": {ts: libri_row(ts, "_conformer") for ts in ["test_clean", "test_other"]},
-        "libri_labelsmooth": {ts: libri_labelsmooth_row(ts) for ts in ["test_clean", "test_other"]},
     }
 
     missing = []

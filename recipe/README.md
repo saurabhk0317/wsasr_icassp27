@@ -9,7 +9,7 @@ with the criterion installed as described in `../espnet/README.md`.
 run_ebf_otc_recip_master_respin.sh   RESPIN   9 languages x 7 criteria   (main WER table)
 run_ebf_otc_recip_master_libri.sh    LibriSpeech train-clean-100, 7 criteria  (main WER + Conformer tables)
 run_ebf_otc_recip_master_fleurs.sh   FLEURS  14 languages x 7 criteria   (main WER table)
-run_ebf_otc_recip_crosstransfer.sh   10 h sweeps behind the schedule-sensitivity figure
+run_ebf_otc_recip_sweep.sh           LibriSpeech 10 h tau / kappa sweeps   (schedule-sensitivity figure)
 otc_recip/run_lib.sh                 shared cell runner used by all of the above
 otc_recip/tests/                     unit tests for the config surface and graphs
 ```
@@ -28,10 +28,12 @@ commands without running them; `--force` reruns completed cells.
 ./run_ebf_otc_recip_master_libri.sh  --methods "ctc otc_token otc_token_word_recip"
 ```
 
-`--encoder` takes `ebf` (default, E-Branchformer) or `conformer`, which swaps
-in the `*_conformer.yaml` configs and appends `_conformer` to the experiment
-tag. The paper reports Conformer results for LibriSpeech only. `--langs` is taken verbatim and must match the directory names in your
-dump; nothing is translated against a baked-in list.
+The LibriSpeech script's `--encoder` takes `ebf` (default, E-Branchformer) or
+`conformer`, which swaps in the `*_conformer.yaml` configs and appends
+`_conformer` to the experiment tag; this is the Conformer table, which the
+paper reports for LibriSpeech only. `--langs` is taken verbatim and must match
+the directory names in your dump; nothing is translated against a baked-in
+list.
 
 ## Seeds
 
@@ -69,8 +71,9 @@ one reported.
 ```
 conf/respin_final/   conf/libri_final/   conf/fleurs_final/
     ctc · otc_word · otc_word_tuned · otc_token · otc_recip
-    otc_token_word · otc_token_word_recip      (+ a _conformer variant of each)
-conf/cross_transfer/     base configs for run_ebf_otc_recip_crosstransfer.sh
+    otc_token_word · otc_token_word_recip
+    (conf/libri_final/ also holds a _conformer variant of each)
+conf/sweep/              base configs for run_ebf_otc_recip_sweep.sh
 conf/{respin,libri,fleurs}/decode_ctc.yaml   CTC prefix-search decoding, no LM
 ```
 
@@ -84,14 +87,26 @@ every run uses `use_lm=false`, so that file is never read and is not shipped.
 
 ## The schedule-sensitivity figure
 
-`run_ebf_otc_recip_crosstransfer.sh` drives the sweeps on a random 10 h subset
-of LibriSpeech `train-clean-100` with the frozen wav2vec 2.0 front-end. The
-figure uses three of its modes on that subset: `ctc` (the reference line),
-`otc_token` with the decay swept from 1.0 to 0.6, and `otc_recip` with the
-exponent κ swept from 0.8 to 1.4, each scored on the combined dev-clean and
-dev-other set. The base configs are `conf/cross_transfer/libri_*_ssl.yaml`.
+`run_ebf_otc_recip_sweep.sh` drives the sweeps on a random 10 h subset of
+LibriSpeech `train-clean-100` (`train_clean_100_ran_10h`) with the frozen
+wav2vec 2.0 front-end. It has three modes: `ctc` (the reference line),
+`otc_token` with the decay τ swept from 1.0 to 0.6 in steps of 0.025, and
+`otc_recip` with the exponent κ swept from 0.8 to 1.4 in steps of 0.1. Each
+cell is decoded on the combined dev-clean and dev-other set, which is what the
+figure reports. The swept value is passed at run time through `--ctc_conf`, so
+the three base configs in `conf/sweep/` are the only files involved; they
+differ only in the loss block. Everything else (initial weights -25 / -5,
+batch bins 6M, warmup 3000, 30 epochs) is held fixed.
 
-The script can also run the same sweeps on RESPIN and FLEURS and transplant a
-decay tuned for one epoch budget onto another; those runs are not reported in
-the paper. Its configs for all three corpora are included because the config
-tests check them.
+```bash
+./run_ebf_otc_recip_sweep.sh --dry-run
+./run_ebf_otc_recip_sweep.sh                    # train; dev decodes are queued
+./run_ebf_otc_recip_sweep.sh --action decode    # score anything left unscored
+python ../analysis/tables/plot_hparam_sweep.py figures
+```
+
+The selected values, τ = 0.775 and κ = 1.3, are the ones in every
+`conf/*_final/` config. The OTC-W′<sub>e</sub> word-level constants (bypass
+-19, decay 0.925; self-loop -1, decay 0.975) were selected on the same subset,
+as the paper states; only the selected values are shipped, in
+`otc_word_tuned.yaml`.

@@ -1,23 +1,22 @@
 # =========================================================================
-# asr_otc_recip | CROSS-TRANSFER sweep | RESPIN | ssl
+# asr_otc_recip | schedule-sensitivity sweep (Fig. 2) | LibriSpeech 10 h | ssl
 # features : frozen SSL (s3prl upstream)   |   epochs: 30
 # -------------------------------------------------------------------------
 # METHOD: ctc
-# CTC baseline for the sweep -- star arcs OFF.
+# CTC reference line for Fig. 2 -- star arcs OFF.
 # Same k2 graph compiler and k2.ctc_loss call as the OTC modes, with
-# allow_bypass_arc/allow_self_loop_arc false, so this is the reference line
-# every decay and k value is measured against.  Nothing is swept for this
-# mode: there is exactly one cell per corpus/language/variant.
+# allow_bypass_arc/allow_self_loop_arc false.  Nothing is swept for this
+# mode: there is exactly one cell per seed.
 #
 # Everything outside ctc_conf is byte-identical to
-# conf/cross_transfer/respin_otc_token_ssl.yaml,
+# conf/sweep/libri_otc_token_ssl.yaml,
 # so the three sweep modes (ctc, otc_token, otc_recip) differ only in the
 # loss.  Controlled across all of them:
 #   initial_bypass_weight -25.0, initial_self_loop_weight -5.0,
 #   batch_bins/accum_grad 6000000/1, warmup_steps 3000.
 #
 # Run with:
-#   ./run_ebf_otc_recip_crosstransfer.sh --corpora respin --variants ssl --modes ctc
+#   ./run_ebf_otc_recip_sweep.sh --modes ctc
 # =========================================================================
 
 encoder: e_branchformer
@@ -57,13 +56,12 @@ ctc_conf:
 frontend: s3prl
 frontend_conf:
   frontend_conf:
-    upstream: wav2vec2_url
-    path_or_url: https://huggingface.co/s3prl/converted_ckpts/resolve/main/xlsr2_300m.pt
+    upstream: wav2vec2_base_960
   download_dir: ./hub
   multilayer_feature: true
 preencoder: linear
 preencoder_conf:
-  input_size: 1024
+  input_size: 768
   output_size: 80
 freeze_param:
 - frontend.upstream

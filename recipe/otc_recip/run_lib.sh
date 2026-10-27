@@ -79,8 +79,9 @@ otcr_require_config() {
     [ -n "${cfg}" ] || otcr_die "empty config path"
     [ -f "${cfg}" ] || otcr_die "missing train config '${cfg}'.
   Configs are NOT generated on the fly. Expected one of:
-    conf/{respin,libri,fleurs}_final/<method>[_conformer].yaml
-    conf/cross_transfer/<corpus>_<mode>_{nonssl,ssl}.yaml"
+    conf/{respin,libri,fleurs}_final/<method>.yaml
+    conf/libri_final/<method>_conformer.yaml
+    conf/sweep/libri_<mode>_ssl.yaml"
 }
 
 # --------------------------------------------------------------------------

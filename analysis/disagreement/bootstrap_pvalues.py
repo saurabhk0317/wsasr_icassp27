@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Paired cluster-bootstrap p-values for the differences in mean bypass
-probability quoted in the paper (Sec. 4.5).
+probability quoted with the paper's disagreement table (tab:disagree).
 
 mean_diff_bootstrap.py reports 95% CIs from 1000 resamples; a two-sided
 bootstrap p-value from N resamples cannot fall below 2/N, so 1000 resamples
@@ -21,7 +21,7 @@ is meaningless; the bootstrap p is floored at 2/n_boot and reported as
 
 Usage:
   bootstrap_pvalues.py --labels_dir labels_mutual --word_probe word_bp_w0 \
-      --out results_mutual/bootstrap_pvalues.txt
+      --out results_mutual_drop/bootstrap_pvalues.txt
 """
 import argparse
 import os

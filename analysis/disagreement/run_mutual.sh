@@ -1,20 +1,17 @@
 #!/usr/bin/env bash
 # ============================================================================
-# Star-disagreement study under the MUTUAL-DISSENT definition of "disputed",
-# with a uniform w=0 probe at both granularities.
+# Validator-disagreement analysis behind the paper's tab:disagree.
 #
 #   disputed = at least one validator differs from the reference AND the
-#              validators do not all supply the same realisation
-#   probe    = w=0 for characters AND words (the original run used w=-2 for
-#              words)
+#              validators do not all supply the same realisation; unanimous
+#              corrections are dropped from both pools (--drop_consensus)
+#   probe    = w=0 for characters and words
 #
-# Reuses posteriors/ unchanged (tok_bp_w0 and word_bp_w0 were already
-# computed), so no GPU and no model access is needed -- only relabelling and
-# re-analysis.  Nothing under labels/ or results/ is touched.
-#
-#   labels_mutual/        new labels
-#   results_mutual/       consensus units counted as AGREED (primary)
-#   results_mutual_drop/  consensus units dropped entirely (sensitivity)
+# Needs posteriors/ from run_star_posteriors.sh.  Writes
+#   labels_mutual/                 labels
+#   results_mutual_drop/           per-language means, by-dissenter split,
+#                                  pooled means with bootstrap CIs
+#   results_mutual_drop/bootstrap_pvalues.txt   10000-resample p-values
 #
 # Usage: ./run_mutual.sh [--n_boot 300]
 # ============================================================================
@@ -36,17 +33,16 @@ done
 
 for split in test dev; do
   python analyze.py --split "${split}" --labels_dir labels_mutual \
-    --results_dir results_mutual --word_measure p_word_w0 --n_boot "${n_boot}" \
-    > "logs/analyze_mutual_${split}.log" 2>&1 &
-  python analyze.py --split "${split}" --labels_dir labels_mutual \
     --results_dir results_mutual_drop --word_measure p_word_w0 --drop_consensus \
     --n_boot "${n_boot}" > "logs/analyze_mutual_drop_${split}.log" 2>&1 &
 done
 wait
 
 python mean_diff_bootstrap.py --labels_dir labels_mutual --word_probe word_bp_w0 \
-  --out results_mutual/mean_diff_bootstrap.txt > logs/boot_mutual.log 2>&1
-python mean_diff_bootstrap.py --labels_dir labels_mutual --word_probe word_bp_w0 \
   --drop_consensus --out results_mutual_drop/mean_diff_bootstrap.txt \
   > logs/boot_mutual_drop.log 2>&1
+# Disputed units only, so the result is the same with or without
+# --drop_consensus; the shipped file was produced without it.
+python bootstrap_pvalues.py --labels_dir labels_mutual --word_probe word_bp_w0 \
+  --out results_mutual_drop/bootstrap_pvalues.txt > logs/pvalues.log 2>&1
 echo "all done"

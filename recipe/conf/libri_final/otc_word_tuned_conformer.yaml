@@ -9,8 +9,8 @@
 # METHOD: otc_word_tuned
 # OTC-WORD with TUNED arc weights (the icefall -19 / +3.75 recipe is the
 # plain otc_word config).  One <star> arc spans a WHOLE WORD; self-loops sit
-# at word boundaries.  Tuned on the LibriSpeech 10h SSL cross-transfer sweep
-# (self-loop-only, bypass-only, then both arcs):
+# at word boundaries.  Selected on the LibriSpeech 10h SSL subset used for the
+# schedule-sensitivity sweep (paper Fig. 2), self-loop first, then bypass:
 #   bypass     -19.0, decay 0.925
 #   self-loop   -1.0, decay 0.975
 # star_start_epoch: 3 -- epochs 1-2 train on the plain CTC graph and every
