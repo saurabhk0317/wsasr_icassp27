@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.pth
+*.log
+.DS_Store
+# cached probe posteriors (regenerable, large)
+analysis/disagreement/posteriors/
+analysis/disagreement/labels*/

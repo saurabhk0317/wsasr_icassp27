@@ -1,0 +1,95 @@
+# =========================================================================
+# asr_otc_recip | RESPIN (9 Indian languages)
+# features : STFT filterbank, no SSL
+# tokens   : char   |   epochs: 70   |   CTC-only (decoder=none, ctc_weight=1.0)
+# encoder  : conformer (12 blocks, d=256, macaron, rel_pos)
+# stopping : patience 5, keep_nbest_models 5 -- otherwise identical to
+#            otc_word.yaml (the e_branchformer config)
+# -------------------------------------------------------------------------
+# METHOD: otc_word
+# OTC-WORD -- one <star> arc spans a WHOLE WORD (icefall / Gao-2023
+# parity), epoch-indexed geometric decay w(e) = w_init * decay^(e-1).
+# Word boundaries are derived from token_list automatically.
+# NOTE: word-mode weights are charged ONCE PER WORD, so -19.0 / +3.75 with
+# 0.975 / 0.999 is NOT on the same scale as otc_token's per-token weights.
+# -------------------------------------------------------------------------
+# Within this corpus, EVERYTHING outside the ctc_conf loss block is identical
+# across the four methods (encoder, optimiser, LR schedule, specaug, batching,
+# seed, keep_nbest_models, averaging).  Enforced by
+# otc_recip/tests/test_config_within_corpus.py.
+# =========================================================================
+
+encoder: conformer
+encoder_conf:
+  output_size: 256
+  attention_heads: 4
+  linear_units: 1024
+  num_blocks: 12
+  dropout_rate: 0.1
+  positional_dropout_rate: 0.1
+  attention_dropout_rate: 0.1
+  input_layer: conv2d
+  normalize_before: true
+  macaron_style: true
+  rel_pos_type: latest
+  pos_enc_layer_type: rel_pos
+  selfattention_layer_type: rel_selfattn
+  activation_type: swish
+  use_cnn_module: true
+  cnn_module_kernel: 31
+decoder: none
+model_conf:
+  ctc_weight: 1.0
+  report_cer: true
+  report_wer: false
+ctc_conf:
+  otc_granularity: word
+  allow_bypass_arc: true
+  allow_self_loop_arc: true
+  arc_schedule: epoch
+  initial_bypass_weight: -19.0
+  bypass_weight_decay: 0.975
+  initial_self_loop_weight: 3.75
+  self_loop_weight_decay: 0.999
+  output_beam: 100.0
+  use_double_scores: true
+frontend_conf:
+  n_fft: 512
+  win_length: 400
+  hop_length: 160
+seed: 2026
+num_workers: 8
+batch_type: numel
+batch_bins: 6000000
+accum_grad: 1
+max_epoch: 70
+patience: 5
+init: none
+best_model_criterion:
+- - valid
+  - loss
+  - min
+keep_nbest_models: 5
+use_amp: false
+optim: adam
+optim_conf:
+  lr: 0.002
+  weight_decay: 1.0e-06
+scheduler: warmuplr
+scheduler_conf:
+  warmup_steps: 15000
+specaug: specaug
+specaug_conf:
+  apply_time_warp: true
+  time_warp_window: 5
+  time_warp_mode: bicubic
+  apply_freq_mask: true
+  freq_mask_width_range:
+  - 0
+  - 27
+  num_freq_mask: 2
+  apply_time_mask: true
+  time_mask_width_ratio_range:
+  - 0.0
+  - 0.05
+  num_time_mask: 5

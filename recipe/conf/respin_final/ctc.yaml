@@ -1,0 +1,92 @@
+# =========================================================================
+# asr_otc_recip | RESPIN (9 Indian languages)
+# features : STFT filterbank, no SSL
+# tokens   : char   |   epochs: 70   |   CTC-only (decoder=none, ctc_weight=1.0)
+# -------------------------------------------------------------------------
+# METHOD: ctc
+# CTC baseline -- star arcs OFF.
+# Goes through the IDENTICAL k2 graph compiler and k2.ctc_loss call as
+# every OTC mode below, with allow_bypass_arc/allow_self_loop_arc set to
+# false: it is the same loss with the wildcard arcs switched off, not a
+# different CTC implementation.  (Verified bit-for-bit against
+# espnet2/asr/ctc_k2.py in otc_recip/tests/test_parity_vs_asr_otc.py.)
+# -------------------------------------------------------------------------
+# Within this corpus, EVERYTHING outside the ctc_conf loss block is identical
+# across the four methods (encoder, optimiser, LR schedule, specaug, batching,
+# seed, keep_nbest_models, averaging).  Enforced by
+# otc_recip/tests/test_config_within_corpus.py.
+# =========================================================================
+
+encoder: e_branchformer
+encoder_conf:
+  output_size: 256
+  attention_heads: 4
+  attention_layer_type: rel_selfattn
+  pos_enc_layer_type: rel_pos
+  rel_pos_type: latest
+  cgmlp_linear_units: 1024
+  cgmlp_conv_kernel: 31
+  use_linear_after_conv: false
+  gate_activation: identity
+  num_blocks: 12
+  dropout_rate: 0.1
+  positional_dropout_rate: 0.1
+  attention_dropout_rate: 0.1
+  input_layer: conv2d
+  layer_drop_rate: 0.0
+  linear_units: 1024
+  positionwise_layer_type: linear
+  use_ffn: true
+  macaron_ffn: true
+  merge_conv_kernel: 31
+decoder: none
+model_conf:
+  ctc_weight: 1.0
+  report_cer: true
+  report_wer: false
+ctc_conf:
+  arc_schedule: none
+  allow_bypass_arc: false
+  allow_self_loop_arc: false
+  output_beam: 100.0
+  use_double_scores: true
+frontend_conf:
+  n_fft: 512
+  win_length: 400
+  hop_length: 160
+seed: 2026
+num_workers: 8
+batch_type: numel
+batch_bins: 6000000
+accum_grad: 1
+max_epoch: 70
+patience: null
+init: none
+best_model_criterion:
+- - valid
+  - loss
+  - min
+keep_nbest_models: 10
+use_amp: false
+optim: adam
+optim_conf:
+  lr: 0.002
+  weight_decay: 1.0e-06
+scheduler: warmuplr
+scheduler_conf:
+  warmup_steps: 15000
+specaug: specaug
+specaug_conf:
+  apply_time_warp: true
+  time_warp_window: 5
+  time_warp_mode: bicubic
+  apply_freq_mask: true
+  freq_mask_width_range:
+  - 0
+  - 27
+  num_freq_mask: 2
+  apply_time_mask: true
+  time_mask_width_ratio_range:
+  - 0.0
+  - 0.05
+  num_time_mask: 5

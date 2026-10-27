@@ -1,0 +1,18 @@
+diff --git a/espnet2/train/trainer.py b/espnet2/train/trainer.py
+index 988a97bcbc..353da6df03 100644
+--- a/espnet2/train/trainer.py
++++ b/espnet2/train/trainer.py
+@@ -324,6 +324,13 @@ class Trainer:
+             set_all_random_seed(trainer_options.seed + iepoch)
+ 
+             reporter.set_epoch(iepoch)
++            # ========================== Changes for OTC ==============================
++            # Propagate epoch to model (used by OTC for arc weight decay;
++            # no-op for standard CTC which does not have set_epoch)
++            _m = model.module if hasattr(model, "module") else model
++            if hasattr(_m, "set_epoch"):
++                _m.set_epoch(iepoch)
++            # ========================== Changes for OTC ==============================
+             # 1. Train and validation for one-epoch
+             torch.cuda.empty_cache()
+             with reporter.observe("train") as sub_reporter:

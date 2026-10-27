@@ -1,0 +1,111 @@
+# =========================================================================
+# asr_otc_recip | RESPIN (9 Indian languages)
+# features : STFT filterbank, no SSL
+# tokens   : char   |   epochs: 70   |   CTC-only (decoder=none, ctc_weight=1.0)
+# -------------------------------------------------------------------------
+# METHOD: otc_token_word_recip
+# OTC-TOKEN-WORD on the ENTROPY-RECIPROCAL schedule.  The otc_recip config
+# with the dual graph (otc_granularity: dual): the otc_token graph (a bypass
+# arc and a self-loop at EVERY token) plus one word-level bypass arc per word
+# of >= 2 tokens.  All three arcs follow ONE entropy-driven progress -- the
+# same entropy block as otc_recip (k 1.3, chosen by the LibriSpeech 10h SSL
+# cross-transfer k-sweep) -- each gliding log-geometrically start -> end:
+#   token bypass  -25.0 -> -0.01    (as otc_recip)
+#   self-loop      -5.0 -> -0.001   (as otc_recip)
+#   word bypass   -19.0 -> -1.0
+# star_start_epoch: 3 -- epochs 1-2 train on the plain CTC graph; every star
+# arc exists from epoch 3 on.
+# -------------------------------------------------------------------------
+# Within this corpus, EVERYTHING outside the ctc_conf loss block is identical
+# across the four methods (encoder, optimiser, LR schedule, specaug, batching,
+# seed, keep_nbest_models, averaging).  Enforced by
+# otc_recip/tests/test_config_within_corpus.py.
+# =========================================================================
+
+encoder: e_branchformer
+encoder_conf:
+  output_size: 256
+  attention_heads: 4
+  attention_layer_type: rel_selfattn
+  pos_enc_layer_type: rel_pos
+  rel_pos_type: latest
+  cgmlp_linear_units: 1024
+  cgmlp_conv_kernel: 31
+  use_linear_after_conv: false
+  gate_activation: identity
+  num_blocks: 12
+  dropout_rate: 0.1
+  positional_dropout_rate: 0.1
+  attention_dropout_rate: 0.1
+  input_layer: conv2d
+  layer_drop_rate: 0.0
+  linear_units: 1024
+  positionwise_layer_type: linear
+  use_ffn: true
+  macaron_ffn: true
+  merge_conv_kernel: 31
+decoder: none
+model_conf:
+  ctc_weight: 1.0
+  report_cer: true
+  report_wer: false
+ctc_conf:
+  otc_granularity: dual
+  allow_bypass_arc: true
+  allow_self_loop_arc: true
+  arc_schedule: entropy_reciprocal
+  star_start_epoch: 3
+  entropy_mode: soft
+  entropy_source: dev
+  entropy_ema_alpha: 0.3
+  entropy_low: 0.01
+  entropy_shape_k: 1.3
+  entropy_eps: 0.0001
+  initial_bypass_weight: -25.0
+  initial_self_loop_weight: -5.0
+  bypass_end: -0.01
+  self_loop_end: -0.001
+  initial_word_bypass_weight: -19.0
+  word_bypass_end: -1.0
+  output_beam: 100.0
+  use_double_scores: true
+frontend_conf:
+  n_fft: 512
+  win_length: 400
+  hop_length: 160
+seed: 2026
+num_workers: 8
+batch_type: numel
+batch_bins: 6000000
+accum_grad: 1
+max_epoch: 70
+patience: null
+init: none
+best_model_criterion:
+- - valid
+  - loss
+  - min
+keep_nbest_models: 10
+use_amp: false
+optim: adam
+optim_conf:
+  lr: 0.002
+  weight_decay: 1.0e-06
+scheduler: warmuplr
+scheduler_conf:
+  warmup_steps: 15000
+specaug: specaug
+specaug_conf:
+  apply_time_warp: true
+  time_warp_window: 5
+  time_warp_mode: bicubic
+  apply_freq_mask: true
+  freq_mask_width_range:
+  - 0
+  - 27
+  num_freq_mask: 2
+  apply_time_mask: true
+  time_mask_width_ratio_range:
+  - 0.0
+  - 0.05
+  num_time_mask: 5
