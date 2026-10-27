@@ -1,8 +1,8 @@
-# Token-level tolerance to transcription ambiguity for ASR
+# A Training Criterion with Token-Level Tolerance to Transcription Ambiguity for Automatic Speech Recognition
 
 Code, configurations, analysis scripts and validator transcripts for
 *A Training Criterion with Token-Level Tolerance to Transcription Ambiguity
-for Automatic Speech Recognition* (ICASSP 2027 submission).
+for Automatic Speech Recognition*.
 
 The paper moves the wildcard (`<star>`) arcs of Omni-temporal Classification
 (OTC) from word to token granularity, adds a hybrid graph carrying both, and
