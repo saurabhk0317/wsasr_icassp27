@@ -4,8 +4,8 @@
 # (see the LICENSE file in the ESPnet source root).
 """``--seed`` must reach BOTH parameter init AND data ordering.
 
-The seed-variance runs in ``run_ebf_otc_recip_seeds.sh`` are only meaningful if
-``--seed`` actually re-randomises the run.  A seed that only reached
+Runs with different ``--seed`` values are only distinct if the seed actually
+re-randomises the run.  A seed that only reached
 ``torch.manual_seed`` would re-initialise the weights but replay the identical
 batch order, which is not an independent sample.
 
@@ -26,9 +26,8 @@ break it.
 CAVEAT, deliberately asserted below: because the offset is ``epoch + seed``,
 seed s at epoch e draws the same ordering as seed s+1 at epoch e-1.  Different
 seeds therefore give SHIFTED orderings rather than independent ones.  Parameter
-init does differ properly, so the runs are genuinely distinct -- but the
-seed-to-seed spread understates true run-to-run variance slightly, and the
-README says so.
+init does differ properly, so the runs are genuinely distinct, but their
+data orderings are not independent.
 
 Run:  python -m pytest otc_recip/tests/test_seed_reaches_sampler.py -v
 """
@@ -151,7 +150,7 @@ def test_batch_order_moves_with_the_seed():
     assert o1 == o1b, "same seed must reproduce the batch order"
     assert o1 != o2, (
         "different seeds produced the SAME batch order -- --seed is not "
-        "reaching the sampler, and the seed-variance runs would be invalid"
+        "reaching the sampler"
     )
     assert sorted(o1) == sorted(o2), "reordering only; no data may be dropped"
 
@@ -173,8 +172,7 @@ def test_known_caveat_seed_offset_is_shared_with_epoch():
     """Document the ``epoch + seed`` collision rather than pretend it away.
 
     Seed s at epoch e draws the ordering of seed s+1 at epoch e-1.  This is
-    upstream ESPnet behaviour, not something this task introduces; the README
-    records it as a limitation of the seed-variance numbers.
+    upstream ESPnet behaviour, not something this task introduces.
     """
     assert _order(20262, epoch=1) == _order(20263, epoch=0)
 

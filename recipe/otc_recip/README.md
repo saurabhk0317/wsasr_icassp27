@@ -283,7 +283,7 @@ cd recipe && PYTHONPATH=/path/to/espnet python -m pytest otc_recip/tests/ -q
 | `test_dual_granularity.py` | the `dual` graph: token arcs plus one word bypass per multi-token word |
 | `test_star_start_epoch.py` | arcs are absent before `star_start_epoch` and the schedules start correctly after it |
 | `test_seed_reaches_sampler.py` | `--seed` reaches parameter init *and* data ordering |
-| `test_parity_vs_asr_otc.py` | identical losses against an earlier in-house implementation, and `none` equal to `ctc_k2` bit-for-bit; skipped when that implementation is absent, as it is in this release |
+| `test_ctc_baseline.py` | the `none` (CTC) graph carries no `<star>` arc and ignores arc settings in a config; the entropy is normalised by log(V-1) |
 
 ---
 
@@ -353,5 +353,5 @@ Reference implementation: icefall, `egs/librispeech/WSASR`.
 
 ## Licence
 
-Apache License 2.0, as ESPnet — see the `LICENSE` file in the ESPnet source
-root. All files added by this task carry the ESPnet Apache-2.0 header.
+Apache License 2.0, as ESPnet; see `LICENSE` at the root of this repository.
+All files added by this task carry the ESPnet Apache-2.0 header.

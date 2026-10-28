@@ -71,8 +71,6 @@ cd recipe && PYTHONPATH=/path/to/espnet python -m pytest otc_recip/tests/ -q
 ```
 
 The two config-test files need only PyYAML and pytest and check that every
-shipped config holds the parameter set the paper reports. One file,
-`test_parity_vs_asr_otc.py`, compares the CTC baseline bit-for-bit against an
-earlier in-house implementation (`espnet2/asr/{ctc_otc_clean,otc_sched_affine,ctc_k2}.py`)
-that is not part of this release, so it is skipped in a fresh ESPnet tree;
-the other files do not depend on it.
+shipped config holds the parameter set the paper reports. The others need
+only the files in this directory, k2 and torch; none is skipped in a fresh
+ESPnet tree.

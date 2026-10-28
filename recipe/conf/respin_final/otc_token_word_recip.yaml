@@ -73,7 +73,7 @@ frontend_conf:
   n_fft: 512
   win_length: 400
   hop_length: 160
-seed: 2026
+seed: 20261            # ch, hi, kn used 2026; the master script passes --seed per language
 num_workers: 8
 batch_type: numel
 batch_bins: 6000000

@@ -20,8 +20,7 @@ indexed by held-out predictive entropy.
 | `analysis/disagreement/` | the validator-disagreement pipeline (labelling, probes, statistics) |
 | `analysis/tables/` | scripts that generate the paper's tables and figure |
 | `analysis/results/` | the analysis outputs the paper quotes |
-| `transcripts/` | the three validator transcriptions of RESPIN dev/test (pending licence clearance; see its README) |
-| `docs/` | supplementary note on the bypass-probability probe |
+| `transcripts/` | format and coverage of the three validator transcriptions of RESPIN dev/test (available on request) |
 
 ## The seven training criteria
 
@@ -98,6 +97,7 @@ The reported results were produced with:
 | k2 | 1.24.4.dev20260525+cuda12.8.torch2.9.1 (all WFST losses) |
 | sentencepiece | 0.2.1 |
 | numpy | 2.2.6 |
+| jiwer | 4.0.0 (WER scoring, `recipe/local/score_lang_id.py`) |
 
 Start from `espnet/README.md`: the criterion needs five new files **and** a
 one-hunk patch to `espnet2/train/trainer.py`. Without the patch the arc
@@ -109,12 +109,10 @@ weights never advance and every OTC system silently degenerates toward CTC.
 - **RESPIN** audio and reference transcripts come from the official corpus
   release and are **not** redistributed here.
 - The **three independent validator transcriptions** that the disagreement
-  analysis is built on are not in this repository yet: their redistribution
-  terms are still being confirmed with the RESPIN project and the vendors.
+  analysis is built on are not included. They may be used for research
+  purposes and are available from the authors on request;
   `transcripts/README.md` records their format, coverage and labelling
-  convention, and they will be added there once cleared. Everything else in
-  this repository, including the analysis outputs the paper quotes, is
-  present.
+  convention. The analysis outputs the paper quotes are in `analysis/results/`.
 
 ## Not included
 
@@ -126,6 +124,10 @@ weights never advance and every OTC system silently degenerates toward CTC.
   and run scripts. Only the runs behind the paper's tables and figure are
   covered here. The loss module also implements a `label_smoothing` schedule
   that no shipped config selects.
+
+## Licence
+
+Code: Apache License 2.0 (`LICENSE`). See `LICENSE.md` for the data.
 
 ## Citation
 

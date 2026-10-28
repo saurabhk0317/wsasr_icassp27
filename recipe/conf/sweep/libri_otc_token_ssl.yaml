@@ -70,7 +70,7 @@ preencoder_conf:
   output_size: 80
 freeze_param:
 - frontend.upstream
-seed: 2026
+seed: 20261
 num_workers: 8
 batch_type: numel
 batch_bins: 6000000

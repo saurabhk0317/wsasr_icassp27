@@ -48,7 +48,7 @@
 gpu=0
 train_stage=10            # 10 = redo collect-stats for the SSL frontend
 suffix=ssl_xlsr300m
-seeds=20261
+seeds=2026
 langs="English Russian Arabic Hindi Bengali Gujarati Punjabi Kannada \
        Malayalam Tamil Telugu Greek Armenian Georgian"   # verbatim
 nbpe=10000                 # unused for token_type=char, but asr_respin.sh wants it

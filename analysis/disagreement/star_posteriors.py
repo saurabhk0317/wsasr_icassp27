@@ -42,7 +42,7 @@ Weight-free per-position statistic, from the Viterbi path of the stars-OFF
 
 <star> emission for every model, incl. CTC (whose training had no star):
       log P(*|t) = logsumexp_{v != blank} log p(v|t) - log(V - 1)
-exactly as in ctc_otc_recip.py / ctc_otc_clean.py.
+exactly as in ctc_otc_recip.py.
 
 READ-ONLY on the model directory. Output:
   posteriors/<lang>_<split>_<method>.pkl.gz

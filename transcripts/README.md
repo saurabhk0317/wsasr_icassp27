@@ -1,12 +1,11 @@
 # Independent validator transcriptions of the RESPIN dev and test sets
 
-**Not in this repository yet.** The transcriptions exist and the analysis in the
-paper is built on them, but their redistribution terms have to be confirmed with
-the RESPIN project and the three validation vendors before they can be
-published. This file records what will be added here and in what form, so that
-the analysis pipeline and the paper can be read in the meantime.
+**Not included in this repository.** The transcriptions on which the paper's
+disagreement analysis is built may be used for research purposes and are
+available from the authors on request. This file records their format and
+coverage, so that the analysis pipeline and the paper can be read without them.
 
-## What will be added
+## What is available on request
 
 The RESPIN corpus releases a single reference transcript per utterance. For the
 disagreement analysis we additionally obtained **three independent
@@ -56,7 +55,7 @@ is a character: splitting a compound is an insertion, merging two words is a
 deleted space.
 
 `../analysis/disagreement/label_disagreement_mutual.py` implements this;
-`../analysis/disagreement/README_mutual.md` describes it in more detail.
+`../analysis/disagreement/README.md` describes the full pipeline.
 
 ## What the disagreement looks like
 

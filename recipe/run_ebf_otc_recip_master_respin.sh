@@ -50,7 +50,8 @@
 gpu=1
 train_stage=11             # features already dumped
 suffix=stft_char
-seeds=20261                # the paper used 2026 for ch, hi, kn; see ../README.md
+seeds=""                   # "" = the paper's seed per language: 2026 for ch, hi, kn,
+                           # 20261 for the rest.  Set to override for every language.
 langs="bn bh ch hi kn mg mt mr te"   # verbatim; must match the dump's dir names
 nbpe=500                   # unused for token_type=char, but asr_respin.sh wants it
 asr_script=asr_respin.sh
@@ -92,8 +93,8 @@ echo "asr_otc_recip | RESPIN | main WER table"
 echo "  features: filterbank (suffix ${suffix}, start stage ${train_stage})"
 echo "  methods : ${RUN_METHODS[*]}"
 echo "  langs   : ${RUN_LANGS[*]}"
-echo "  seeds   : ${seeds}"
-echo "  cells   : $(( ${#RUN_METHODS[@]} * ${#RUN_LANGS[@]} * $(echo ${seeds} | wc -w) ))"
+echo "  seeds   : ${seeds:-per language (ch/hi/kn 2026, others 20261)}"
+echo "  cells   : $(( ${#RUN_METHODS[@]} * ${#RUN_LANGS[@]} * $(echo ${seeds:-1} | wc -w) ))"
 echo "  gpu     : ${gpu}   dry-run: ${dry_run}   force: ${force}"
 echo "======================================================================"
 
@@ -145,8 +146,12 @@ for code in "${RUN_LANGS[@]}"; do
         --inference_nj "${inference_nj}"
     )
 
+    lang_seeds="${seeds}"
+    if [ -z "${lang_seeds}" ]; then
+        case "${code}" in ch|hi|kn) lang_seeds=2026 ;; *) lang_seeds=20261 ;; esac
+    fi
     for method in "${RUN_METHODS[@]}"; do
-        for seed in ${seeds}; do
+        for seed in ${lang_seeds}; do
             OTCR_METHOD="${method}"
             OTCR_SEED="${seed}"
             OTCR_CONFIG="conf/respin_final/${method}.yaml"

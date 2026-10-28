@@ -56,11 +56,12 @@ Several scripts carry absolute paths from the machine the experiments ran on:
 |---|---|---|
 | `disagreement/label_disagreement.py` | `DATA_ROOT` | the RESPIN data root holding `<lang>/IISc_RESPIN_{dev,test}_<lang>/` |
 | `disagreement/star_posteriors.py` | `DATA_ROOT` | the same RESPIN data root |
-| `disagreement/run_mutual.sh`, `run_all.sh`, `run_star_posteriors.sh` | `EXP`, `VENV` | the experiment root and the ESPnet virtualenv activate script |
+| `disagreement/run_mutual.sh`, `run_star_posteriors.sh` | `EXP`, `VENV` | the experiment root and the ESPnet virtualenv activate script |
 | `tables/extract_wer.py` | `ROOT` | the directory holding the `{libri,fleurs,respin}` experiment trees |
 
 The disagreement pipeline additionally needs the three validator transcripts
-beside each `text` in the RESPIN tree that `DATA_ROOT` points at. Those are not
-yet in this repository (see `../transcripts/README.md`); until they are, step 1
-cannot be rerun, but the outputs it produced are in `results/` and the tables
-can be regenerated from them.
+beside each `text` in the RESPIN tree that `DATA_ROOT` points at. They are not
+in this repository but are available on request for research use (see
+`../transcripts/README.md`); without them step 1 cannot be rerun, but the
+outputs it produced are in `results/` and the tables can be regenerated from
+them.

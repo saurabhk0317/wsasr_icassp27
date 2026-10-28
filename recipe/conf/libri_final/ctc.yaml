@@ -8,8 +8,8 @@
 # Goes through the IDENTICAL k2 graph compiler and k2.ctc_loss call as
 # every OTC mode below, with allow_bypass_arc/allow_self_loop_arc set to
 # false: it is the same loss with the wildcard arcs switched off, not a
-# different CTC implementation.  (Verified bit-for-bit against
-# espnet2/asr/ctc_k2.py in otc_recip/tests/test_parity_vs_asr_otc.py.)
+# different CTC implementation.  (otc_recip/tests/test_ctc_baseline.py
+# checks that the compiled graph carries no <star> arc.)
 # -------------------------------------------------------------------------
 # Within this corpus, EVERYTHING outside the ctc_conf loss block is identical
 # across the criteria (encoder, optimiser, LR schedule, specaug, batching,
@@ -63,7 +63,7 @@ preencoder_conf:
   output_size: 80
 freeze_param:
 - frontend.upstream
-seed: 2026
+seed: 20261
 num_workers: 8
 batch_type: numel
 batch_bins: 16000000

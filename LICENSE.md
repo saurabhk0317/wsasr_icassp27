@@ -1,16 +1,13 @@
 # Licensing
 
-**Code** (`espnet/`, `recipe/`, `analysis/`): to be finalised before release.
-MIT is the intended licence; confirm with the institution first.
+**Code** (`espnet/`, `recipe/`, `analysis/`) is released under the Apache
+License 2.0; the full text is in `LICENSE`. The files under `espnet/` and
+`recipe/asr_respin.sh` are derived from ESPnet, which uses the same licence, and
+the patch in `espnet/patches/` is a diff against ESPnet source.
 
-The files under `espnet/` are derived from ESPnet, which is distributed under
-Apache 2.0, and must be released on terms compatible with it. The patch in
-`espnet/patches/` is a diff against ESPnet source and carries ESPnet's licence.
-
-**Validator transcriptions**: not included in this repository. Produced by
-three external validation vendors under the RESPIN project; redistribution
-terms are still being confirmed with the project and the vendors. They will be
-added under `transcripts/` once cleared, and the licence recorded here.
+**Validator transcriptions** of the RESPIN dev and test sets are not included
+in this repository. They may be used for research purposes and are available
+from the authors on request; see `transcripts/README.md`.
 
 **RESPIN audio and reference transcripts** are not redistributed here; obtain
 them from the official corpus release under its own terms.

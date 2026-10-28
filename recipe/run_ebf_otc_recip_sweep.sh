@@ -936,5 +936,5 @@ else
         echo "Decodes : ${XT_DEC_OK} ok, ${XT_DEC_FAIL} failed"
     fi
 fi
-echo "Dev WERs: <expdir>/${OTCR_INFER_TAG}/org/dev/score_wer/result.txt;"
+echo "Dev WERs: the Overall WER line of <expdir>/${OTCR_INFER_TAG}/org/dev/result_lid.txt;"
 echo "plot with: python ../analysis/tables/plot_hparam_sweep.py"

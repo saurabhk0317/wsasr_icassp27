@@ -1,9 +1,31 @@
 # Running the experiments
 
 These are the master scripts as used for the paper. They are ESPnet2 recipe
-drivers and expect to be run from inside an ESPnet egs2-style recipe directory
-(the one holding `asr_respin.sh` / `asr.sh`, `utils/`, `dumps/` and `data_*`),
-with the criterion installed as described in `../espnet/README.md`.
+drivers, run from inside an ESPnet egs2-style recipe directory, with the
+criterion installed as described in `../espnet/README.md`. To set one up:
+
+```bash
+cd /path/to/espnet/egs2
+TEMPLATE/asr1/setup.sh wsasr/asr1     # utils/ steps/ scripts/ pyscripts/ path.sh cmd.sh local/
+cp -r /path/to/this/repo/recipe/. wsasr/asr1/
+cd wsasr/asr1
+```
+
+The data directories (`data_respin/`, `data_libri/`, `data_fleurs/`) and the
+dumps are prepared with the standard ESPnet recipes for each corpus; the
+master scripts start at stage 11 (training).
+
+`asr_respin.sh` is ESPnet's `egs2/TEMPLATE/asr1/asr.sh` at the pinned commit
+with three changes: the data directory is a `--data_folder` option rather than
+a fixed `data/`, with a `--tag` that names the token list; the collect-stats
+job uses one GPU; and stage 13 scores with `local/score_lang_id.py` instead of
+`local/score.sh`. That script writes the `result_lid.txt` whose
+`Overall WER` line is the number reported in the paper's tables and figure.
+It removes `, ? । .` from reference and hypothesis, computes the
+corpus-level WER with jiwer, and scores only the utterances listed in
+`<data_folder>/<set>/utt2dialect` (`<utt-id> <label>`). RESPIN ships dialect
+labels; for LibriSpeech and FLEURS every utterance carries the language code as
+its label (e.g. `en`), so the file just lists every utterance of the set.
 
 ```
 run_ebf_otc_recip_master_respin.sh   RESPIN   9 languages x 7 criteria   (main WER table)
@@ -38,21 +60,19 @@ list.
 ## Seeds
 
 Every cell in the paper is one training run, and within a language every
-criterion uses the same seed. The scripts default to `--seeds 20261`; to
-reproduce the paper exactly, pass the seed its runs used:
+criterion uses the same seed. The scripts' defaults are the seeds the paper's
+runs used, and the `seed:` key in each config agrees (the scripts always pass
+`--seed` explicitly, so it is the script value that takes effect):
 
 | corpus | seed |
 |---|---|
-| LibriSpeech | 20261 |
+| LibriSpeech (incl. Conformer and the 10 h sweeps) | 20261 |
 | FLEURS (all 14 languages) | 2026 |
 | RESPIN `bh`, `bn`, `mg`, `mr`, `mt`, `te` | 20261 |
 | RESPIN `ch`, `hi`, `kn` | 2026 |
 
-```bash
-./run_ebf_otc_recip_master_fleurs.sh --seeds 2026
-./run_ebf_otc_recip_master_respin.sh --seeds 2026  --langs "ch hi kn"
-./run_ebf_otc_recip_master_respin.sh --seeds 20261 --langs "bh bn mg mr mt te"
-```
+The RESPIN script picks the seed per language when `--seeds` is not given;
+passing `--seeds N` applies `N` to every selected language.
 
 ## Front-ends
 
